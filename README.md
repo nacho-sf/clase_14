@@ -248,9 +248,69 @@ const checkApiKey = function(req, res, next) {
 
 
 
--Hasta ahora, solo hemos hecho rutas que devuelven vistas. A continuación haremos rutas que devuelvan objetos (como la Pokeapi). O sea,cuando lleguemos a REACT crearemos un servidor como una API pura (sin vistas), que le pides un dato y te devuelve un objeto. Luego los puedes pintar en el FRONT
+-Hasta ahora, solo hemos hecho rutas que devuelven vistas. A continuación haremos rutas que devuelvan objetos (como la Pokeapi). O sea, cuando lleguemos a REACT crearemos un servidor como una API pura (sin vistas), que le pides un dato y te devuelve un objeto. Luego los puedes pintar en el FRONT.
 
 -En nuestro conjunto de rutas (productsRoutes) Cada vez que se hace un ".send" se está devolviendo una vista con un render.
 
 
--Se crea en la carpeta "routes" --> "productsApiRoutes.js"
+-Entonces, se crea en la carpeta "routes" --> "productsApiRoutes.js" y en la carpeta "controllers" --> "productsApiController.js" y se copian en ellos los código de los respectivos archivos "productsRoutes.js" y "productsController.js"
+
+-Situados en "productsApiController.js", quiero que, en lugar de que haga un "render", que devuelva un objeto. Entonces se sustituye el método ".render" por ".json", y en el primer parámetro ('products'), que era el PUG, lo eliminamos. Así con todas las funciones.
+
+
+-En "productsApiRoutes.js", introducimos "Api" para sustituír TODOS los términos. Ej:
+
+"const productsRouter = express.Router();"
+-por: "const productsApiRouter = express.Router();"
+
+
+-A continuación, se renombran las rutas (http://localhost:3000/api/products). Entonces, nos situamos en "app.js" y hay que importar el router:
+
+// Rutas de productos
+const productsRoutes = require("./routes/productsRoutes");
+
+-Por:
+// Rutas de productos
+const productsRoutes = require("./routes/productsRoutes");
+const productsApiRoutes = require("./routes/productsApiRoutes");
+
+
+
+-Ahora, si hiciéramos una petición a la ruta http://localhost:3000/api/products nos devuelve un objeto. Sin embargo, este tiene una estructura inecesariamente compleja (un objeto que contiene un array lleno de objetos). Entondes, modificamos las funciones en productsApiController:
+
+TRY:
+-En -> res.status(200).json({ 'products': [products] }); // Devuelve objeto, con array lleno de objetos
+-Por -> res.status(200).json(product); // Devuelve objeto. Como solo devuelve uno, se pone en singular
+
+CATCH:
+-En -> res.status(404).json({ 'products': [] }); // Devuelve JSON
+-Por -> res.status(404).json({ 'Error':'Producto no encontrado' }); // Devuelve objeto con mensaje de error
+
+-Con el siguiente catch igual, pero en plural (products)
+
+-En el cado de createProduct y deleteProduct no tiene sentido para la vista web (desde la web no se puede hacer POST y DELETE), pero sí para la Api, así que se modifican igual, para que devuelvan objetos:
+
+TRY y CATCH -> Sustituímos ".send" por ".json", y se meten los string de respuesta dentro del valor de un objeto que creamos, con clave "message":
+
+En -> res.status(201).send(`Producto ${answer.title} guardado en el sistema con ID: ${answer.id}`);
+Por -> res.status(201).json({"message":`Producto ${answer.title} guardado en el sistema con ID: ${answer.id}`});
+
+En -> res.status(400).send(`Error guardando producto ${answer.title}`);
+Por -> res.status(400).json({"message":`Error guardando producto ${answer.title}`});
+
+
+Y para delete product:
+
+En -> res.send(msj);
+Por -> res.json({"message":msj});
+
+
+
+
+
+
+-Limpiamos un poco el código. Como hemos dicho, createProduct y deleteProduct no tiene sentido para la vista web (desde la web no se puede hacer POST y DELETE). Entonces lo borraríamos en el archivo "productsRoutes.js", pero se deja comentado y no borrado por fines didácticos.
+
+-En ese archivo, el middleware no lo necesito, porque era para le POST y DELETE, así que se borraría.
+
+-Igualmente se haría en el archivo "productsController.js" con POST y DELETE  --> Comentado

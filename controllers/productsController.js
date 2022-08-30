@@ -27,7 +27,7 @@ const getProducts = async (req, res) => {
         }
     }
 };
-
+/*
 const createProduct = async (req, res) => {
     console.log("Esto es el console.log de lo que introducimos por postman", req.body); // Objeto recibido de producto nuevo
     const newProduct = req.body; // {} nuevo producto a guardar
@@ -58,11 +58,11 @@ const deleteProduct = async (req, res) => {
     console.log(msj);
     res.send(msj);
 };
-
+*/
 module.exports = {
     getProducts,
-    createProduct,
-    deleteProduct
+    //createProduct,
+    //deleteProduct
 };
 
 

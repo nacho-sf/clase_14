@@ -7,6 +7,7 @@ const whale = require("cowsay2/cows/whale");
 
 // Rutas de productos
 const productsRoutes = require("./routes/productsRoutes");
+const productsApiRoutes = require("./routes/productsApiRoutes");
 
 // Módulos propios
 const calc = require("./utils/calculator");
@@ -32,15 +33,30 @@ app.use(express.json());
 // Este afecta a todas las rutas del documento:
 // app.use(checkApiKey);
 
-// Router de productos
+// Router de productos: WEB
 app.use("/products", productsRoutes);
 //Con middleware de acceso para TODAS las rutas /products:
 //app.use("/products", checkApiKey, productsRoutes);
 
+// Router de productos: API
+app.use("/api/products", productsApiRoutes);
 
 
 
-///////////// RUTAS:
+///////////// RUTAS WEB: --> Devuelven vistas
+
+// http://localhost:3000/products GET
+// http://localhost:3000/products/3 GET
+
+
+///////////// RUTAS API: --> Devuelven objetos
+
+// http://localhost:3000/api/products GET
+// http://localhost:3000/api/products/3 GET
+// http://localhost:3000/api/products POST
+// http://localhost:3000/api/products DELETE
+
+
 
 
 // GET: HOME
