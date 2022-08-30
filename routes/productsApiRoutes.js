@@ -1,4 +1,4 @@
-// RUTAS DE PRODUCTOS
+// (API) RUTAS DE PRODUCTOS
 
 const express = require('express');
 

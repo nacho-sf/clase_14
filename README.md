@@ -111,6 +111,146 @@ module.exports = products;
 
 -Es una operación intermedia que hace comprobaciones, como por ejemplo, saber si la ruta existe. Si esta no existe, hará lo que le indiquemos
 
+-Son como capas (de funciones Middleware) que hay que ir superano, y si las pasa todas, ejecutara la tarea principal. Ver imagen "clase_13" Middleware Pattern.
+    -Auth Middleware: Autenticación (si manda APIKEY o no...)
+    -CORS Middleware: Comprueba desde qué IP estás haciendo la petición (se puede restringir a peticiones solo de IP conocidas)
+    -...
+
+
 -Añadimos en "app.js" el código: "app.use(function (req,res,next...". Se añade en el archivo principal porque va a funcionar de tal forma que va a ser el que lea primero de todos y de forma secuencial. Entonces va a intentar secuencialmente todas las rutas que lea, y si ninguna coincide, llegará a "app.use(function (req,res,next...", que estará al final y tirará el 404. Es como si fuera un if..else, por si ha fallado todo. Por ejemplo, si escribimos "http://localhost:3000/cnruo3bcu", va a lanzar el mensaje de error.
 
--Más adelante, se creará la carpeta middlewares, que manejan las incoming request antes de pasarlo a las rutas para que lo manejen. Por ejemplo, se puede meter un middleware para comprobar si hay ApiKey o no
+
+-Ejemplo de estructura, para verificar si un usuario es admin:
+
+    function isAdmin(req, res, next) {
+        if (req.body.isAdmin) {
+            next();
+        } else {
+            res.status(403).send(`Si no eres admin no tienes acceso a la ruta ${req.url}`)
+        }
+    }
+
+-El parámetro "next()" funciona tal que si la función ejecuta if(), este es un método interno que pasa al siguiente paso.
+
+
+
+-Se crea la carpeta "middlewares" y dentro los ficheros JS "auth_API_KEY.js" y "error404.js".
+
+-Al igual que con los controladores, nos llevamos la función middleware que teníamos al final del documento "app.js" a "error404.js", la metemos en la variable "manage404" y la exportamos.
+
+-En "app.js" la importamos bajo la sección de importación de módulos propios, y donde teníamos nuestra función middleware la llamamos con su nombre de variable --> app.use(manage404);
+
+
+
+-En las URL's, los parámetros comienzan después del signo de interrogación.
+
+-Existe un objeto que te permite acceder a todos los parámetros que están tras la interrogación --> req.query
+
+
+Ejemplos de parámetros en express:
+
+http://localhost:3000/products
+
+http://localhost:3000/products?API_KEY="12354djd"
+
+Con Query params --> req.query
+https://misimagenes.com?user=20&size=big&quality=low
+httpS://www.omdbapi.com/?t=${req.params.title}&apikey=${APIKEY}
+req.query.t
+req.query.apikey
+
+Paámetros de ruta --> req.params
+http://localhost:3000/products/:id --> ruta en express
+http://localhost:3000/products/3 --> req.params.id
+http://localhost:3000/products/55 --> req.params.id
+
+
+
+
+-A continuación vamos a meter la comprobación de la existencia de APIKEY en la URL de la petición:
+
+Ejemplo para:
+http://localhost:3000/products?API_KEY="12354djd"
+
+
+-En "auth.js" se escribe:
+
+const checkApiKey = function(req, res, next) {
+    if (req.query.API_KEY) {
+        next();
+    } else {
+        res.status(401).send("Error. API KEY no proveída");
+    }
+}
+
+module.exports = checkApiKey;
+
+-Para buscar el error cuando no introduczan APIKEY se busca en HTTP CATS.
+
+
+-A continuación, lo importamos en "app.js" --> const checkApiKey = require('./middlewares/auth_API_KEY')
+
+-Escribimos la declaración antes de las rutas para bloquearlas --> app.use(checkApiKey)
+
+-Esto funciona si le pasamos APIKEY, pero no importa cual porque no lo hemos establecido:
+
+http://localhost:3000/products?API_KEY=laquesea
+
+-Si no le pasamos el parámetro, no nos dejará entrar.
+
+-En realidad, esto es muy masivo porque estás haciendo que si no pasas APIKEY a la App no se puede ver ninguna de las muchas rutas que podría tener. Por ello, se colocaría dentro de las rutas que se quieran restringir:
+
+-En lugar de:
+// Middleware APIKEY (ANTES DE LAS RUTAS!!)
+app.use(checkApiKey);
+// Router de productos
+app.use("/products", productsRoutes);
+
+-Esto:
+// Middleware APIKEY (ANTES DE LAS RUTAS!!)
+
+// Router de productos
+app.use("/products", checkApiKey, productsRoutes);
+
+
+
+
+-Ejemplo de restricción para admin/users:
+
+-Existen rutas en mi app que permiten escribir y borrar datos. Para usesr se quiere solo lectura.
+
+-En "productRoutes.js" importamos la chekApiKey --> const checkApiKey = require('./middlewares/auth_API_KEY') y luego se establece por ruta cada una de las rutas POST y DELETE, de la misma manera que antes.
+
+-La ruta GET, en realidad, es una VISTA que envía la renderización de los productos. Es lo que quieres para users.
+
+-Las rutas POST y DELETE necesitas una APIKEY para hacer estas operaciónes, propias del admin.
+
+-Es importante recordar que en las rutas, hay que colocar el parámetro checkApiKey en primer lugar.
+
+-A continuación, se prueban las rutas POST y DELETE en POSTMAN. No deberían permitir el acceso, pero GET sí.
+
+-Si le metemos una APIKEY (la que sea), permitirá:
+http://localhost:3000/products?API_KEY=lalala
+
+
+-En el futuro habrá que comprobar si existe la APIKEY en la base de datos (BBDD users/pass). En "auth_API_KEY.js" tendremos el código para acceder a la BBDD y en el condicional se compobará que si existe en BBDD entonces next() si no etc... Ej:
+
+const checkApiKey = function(req, res, next) {
+
+    if (req.query.API_KEY === "12345") {
+        next();
+    } else {
+        res.status(401).send("Error. API KEY no proveída");
+    }
+};
+
+-Habría que comprobar la APIKEY que se pasa y contrastarla en BBDD con el listado de APIKEYS verificadas
+
+
+
+-Hasta ahora, solo hemos hecho rutas que devuelven vistas. A continuación haremos rutas que devuelvan objetos (como la Pokeapi). O sea,cuando lleguemos a REACT crearemos un servidor como una API pura (sin vistas), que le pides un dato y te devuelve un objeto. Luego los puedes pintar en el FRONT
+
+-En nuestro conjunto de rutas (productsRoutes) Cada vez que se hace un ".send" se está devolviendo una vista con un render.
+
+
+-Se crea en la carpeta "routes" --> "productsApiRoutes.js"

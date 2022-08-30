@@ -5,12 +5,17 @@ const cowsay = require("cowsay2");
 const owl = require("cowsay2/cows/owl");
 const whale = require("cowsay2/cows/whale");
 
+// Rutas de productos
 const productsRoutes = require("./routes/productsRoutes");
-
 
 // Módulos propios
 const calc = require("./utils/calculator");
 console.log(calc.add(10, 100));
+
+// Tus Middleware
+const manage404 = require('./middlewares/error404');
+const checkApiKey = require('./middlewares/auth_API_KEY');
+
 
 // Variables globales
 const app = express()
@@ -22,8 +27,16 @@ app.set('views','./views');
 
 // Read body in POST
 app.use(express.json());
+
+// Middleware APIKEY. Colocado en Router de productos
+// Este afecta a todas las rutas del documento:
+// app.use(checkApiKey);
+
 // Router de productos
 app.use("/products", productsRoutes);
+//Con middleware de acceso para TODAS las rutas /products:
+//app.use("/products", checkApiKey, productsRoutes);
+
 
 
 
@@ -68,9 +81,7 @@ app.get('/perritos', (req, res) => {
 
 // Middleware de error 404
 // Respuesta por defecto para rutas no existentes
-app.use(function (req,res,next) {
-  res.status(404).send('ERROR!! 404 not found :)');
-});
+app.use(manage404);
 
 
 // Listener lanazado al iniciar servidor
